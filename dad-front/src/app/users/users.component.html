@@ -1,0 +1,89 @@
+<div class="users-container">
+  <div class="users-header">
+    <div class="header-content">
+      <h2>Gestión de Usuarios</h2>
+      <p>Administra los usuarios del sistema de farmacia</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      <span class="btn-icon">👤</span>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+  
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showForm" class="form-overlay">
+    <div class="form-modal">
+      <div class="form-header">
+        <h3>{{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+        <button class="close-btn" (click)="closeForm()">×</button>
+      </div>
+      
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
+        <div class="form-group">
+          <label for="userName">Nombre de Usuario *</label>
+          <input
+            type="text"
+            id="userName"
+            formControlName="userName"
+            class="form-control"
+            [class.error]="userForm.get('userName')?.invalid && userForm.get('userName')?.touched"
+            placeholder="Nombre de usuario único"
+          />
+          <div *ngIf="userForm.get('userName')?.invalid && userForm.get('userName')?.touched" class="error-message">
+            <span *ngIf="userForm.get('userName')?.errors?.['required']">El nombre de usuario es requerido</span>
+            <span *ngIf="userForm.get('userName')?.errors?.['minlength']">Debe tener al menos 3 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña *</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [class.error]="userForm.get('password')?.invalid && userForm.get('password')?.touched"
+            placeholder="Mínimo 6 caracteres"
+          />
+          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="error-message">
+            <span *ngIf="userForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
+            <span *ngIf="userForm.get('password')?.errors?.['minlength']">Debe tener al menos 6 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid || loading">
+            <span *ngIf="loading">Registrando...</span>
+            <span *ngIf="!loading">{{ isEditing ? 'Actualizar' : 'Registrar Usuario' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Users List Placeholder -->
+  <div class="users-content">
+    <div class="info-card">
+      <div class="info-icon">👥</div>
+      <div class="info-content">
+        <h3>Gestión de Usuarios</h3>
+        <p>Utiliza el botón "Nuevo Usuario" para registrar usuarios adicionales en el sistema farmacia.</p>
+        <p class="note">Solo se requiere nombre de usuario y contraseña. El registro usa el endpoint /auth/create.</p>
+      </div>
+    </div>
+  </div>
+</div>

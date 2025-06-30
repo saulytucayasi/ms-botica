@@ -1,10 +1,119 @@
-<p>category works!</p>
-<div class="overflow-x-auto">
-  <ul>
-    @for ( elemento of categories;track categories) {
-    <li>{{ elemento. nombre }}</li>
-    } @empty {
-    <li>No hay elementos disponibles.</li>
-  }
-  </ul>
+<div class="categories-container">
+  <div class="categories-header">
+    <div class="header-content">
+      <h2>Gestión de Categorías</h2>
+      <p>Administra las categorías de productos</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      + Nueva Categoría
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+  
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showForm" class="form-overlay">
+    <div class="form-modal">
+      <div class="form-header">
+        <h3>{{ isEditing ? 'Editar Categoría' : 'Nueva Categoría' }}</h3>
+        <button class="close-btn" (click)="closeForm()">×</button>
+      </div>
+      
+      <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+        <div class="form-group">
+          <label for="nombre">Nombre *</label>
+          <input
+            type="text"
+            id="nombre"
+            formControlName="nombre"
+            class="form-control"
+            [class.error]="categoryForm.get('nombre')?.invalid && categoryForm.get('nombre')?.touched"
+            placeholder="Nombre de la categoría"
+          />
+          <div *ngIf="categoryForm.get('nombre')?.invalid && categoryForm.get('nombre')?.touched" class="error-message">
+            <span *ngIf="categoryForm.get('nombre')?.errors?.['required']">El nombre es requerido</span>
+            <span *ngIf="categoryForm.get('nombre')?.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea
+            id="descripcion"
+            formControlName="descripcion"
+            class="form-control"
+            rows="3"
+            placeholder="Descripción de la categoría (opcional)"
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid || loading">
+            <span *ngIf="loading">Guardando...</span>
+            <span *ngIf="!loading">{{ isEditing ? 'Actualizar' : 'Crear' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Categories List -->
+  <div class="categories-content">
+    <div *ngIf="loading && categories.length === 0" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando categorías...</p>
+    </div>
+
+    <div *ngIf="!loading && categories.length === 0" class="empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>No hay categorías</h3>
+      <p>Crea tu primera categoría para comenzar a organizar tus productos</p>
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        + Crear Primera Categoría
+      </button>
+    </div>
+
+    <div *ngIf="categories.length > 0" class="categories-grid">
+      <div *ngFor="let category of categories" class="category-card">
+        <div class="category-info">
+          <h3>{{ category.nombre }}</h3>
+          <p>{{ category.descripcion || 'Sin descripción' }}</p>
+          <div class="category-meta">
+            <span class="category-id">ID: {{ category.id }}</span>
+          </div>
+        </div>
+        
+        <div class="category-actions">
+          <button 
+            class="btn-icon edit" 
+            (click)="openEditForm(category)" 
+            [disabled]="loading"
+            title="Editar categoría"
+          >
+            ✏️
+          </button>
+          <button 
+            class="btn-icon delete" 
+            (click)="deleteCategory(category)" 
+            [disabled]="loading"
+            title="Eliminar categoría"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

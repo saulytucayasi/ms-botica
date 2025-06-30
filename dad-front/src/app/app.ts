@@ -1,38 +1,53 @@
-import {Component, OnInit} from '@angular/core';
-import {RouterOutlet} from '@angular/router';
-import {Services} from './core/service/services';
-import {Category} from './category/category';
-import {CategoryModel} from './category/models/category-model';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { RouterOutlet, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from './core/service/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Category],
+  imports: [RouterOutlet, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  protected title = 'dad-front';
-  // @ts-ignore
-  public categories: CategoryModel[] = [];
+  title = 'Sistema de Gestión de Farmacia';
+  currentUser: string | null = null;
+  isAuthenticated = false;
 
-  constructor(private services: Services) {
-  }
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-
-    this.getCategories();
-    //throw new Error('Method not implemented.');
-    /*this.services.getProduct().subscribe(data => {
-      console.log(data);
-    });*/
-
+    // Initialize state
+    this.updateAuthState();
+    
+    // Subscribe to authentication changes
+    this.authService.currentUser$.subscribe(user => {
+      console.log('App - User changed:', user);
+      this.updateAuthState();
+      this.cdr.detectChanges();
+    });
   }
 
-  private getCategories(): void {
-    this.services.getCategories().subscribe(res => {
-      this.categories = res;
+  private updateAuthState(): void {
+    this.currentUser = this.authService.getCurrentUser();
+    this.isAuthenticated = this.authService.isAuthenticated();
+    console.log('App - Updated state:', { user: this.currentUser, authenticated: this.isAuthenticated });
+  }
 
-      console.log(res);
+  logout(): void {
+    console.log('App - Logout clicked');
+    this.authService.logout();
+    this.updateAuthState();
+    this.router.navigate(['/login']).then(() => {
+      console.log('App - Navigated to login');
     });
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
   }
 }

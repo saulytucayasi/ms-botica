@@ -1,0 +1,298 @@
+<div class="inventory-container">
+  <div class="inventory-header">
+    <div class="header-content">
+      <h2>Gestión de Inventario</h2>
+      <p>Control de stock y ubicaciones de productos</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      <span class="btn-icon">📦</span>
+      Nuevo Inventario
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters">
+      <button 
+        class="filter-btn" 
+        [class.active]="showLowStock"
+        (click)="toggleLowStockFilter()"
+      >
+        ⚠️ Stock Bajo
+      </button>
+      
+      <select 
+        [(ngModel)]="selectedLocation" 
+        class="location-filter"
+        [disabled]="loading"
+      >
+        <option value="">Todas las ubicaciones</option>
+        <option *ngFor="let location of getUniqueLocations()" [value]="location">
+          {{ location }}
+        </option>
+      </select>
+      
+      <button 
+        class="clear-filters-btn" 
+        (click)="clearFilters()"
+        *ngIf="showLowStock || selectedLocation"
+      >
+        🗑️ Limpiar Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+  
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showForm" class="form-overlay">
+    <div class="form-modal">
+      <div class="form-header">
+        <h3>{{ isEditing ? 'Editar Inventario' : 'Nuevo Inventario' }}</h3>
+        <button class="close-btn" (click)="closeForm()">×</button>
+      </div>
+      
+      <form [formGroup]="inventoryForm" (ngSubmit)="onSubmit()" class="inventory-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productoId">Producto *</label>
+            <select
+              id="productoId"
+              formControlName="productoId"
+              class="form-control"
+              [class.error]="inventoryForm.get('productoId')?.invalid && inventoryForm.get('productoId')?.touched"
+              [disabled]="isEditing"
+            >
+              <option value="">Seleccionar producto</option>
+              <option *ngFor="let product of products" [value]="product.id">
+                {{ product.nombre }}
+              </option>
+            </select>
+            <div *ngIf="inventoryForm.get('productoId')?.invalid && inventoryForm.get('productoId')?.touched" class="error-message">
+              El producto es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ubicacion">Ubicación</label>
+            <input
+              type="text"
+              id="ubicacion"
+              formControlName="ubicacion"
+              class="form-control"
+              placeholder="Ej: A1-B2, Estante 3"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="stockActual">Stock Actual *</label>
+            <input
+              type="number"
+              id="stockActual"
+              formControlName="stockActual"
+              class="form-control"
+              [class.error]="inventoryForm.get('stockActual')?.invalid && inventoryForm.get('stockActual')?.touched"
+              placeholder="0"
+              min="0"
+            />
+            <div *ngIf="inventoryForm.get('stockActual')?.invalid && inventoryForm.get('stockActual')?.touched" class="error-message">
+              El stock actual es requerido y debe ser ≥ 0
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="costoPromedio">Costo Promedio</label>
+            <div class="price-input">
+              <span class="currency">$</span>
+              <input
+                type="number"
+                id="costoPromedio"
+                formControlName="costoPromedio"
+                class="form-control price-field"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="stockMinimo">Stock Mínimo *</label>
+            <input
+              type="number"
+              id="stockMinimo"
+              formControlName="stockMinimo"
+              class="form-control"
+              [class.error]="inventoryForm.get('stockMinimo')?.invalid && inventoryForm.get('stockMinimo')?.touched"
+              placeholder="5"
+              min="0"
+            />
+            <div *ngIf="inventoryForm.get('stockMinimo')?.invalid && inventoryForm.get('stockMinimo')?.touched" class="error-message">
+              El stock mínimo es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="stockMaximo">Stock Máximo *</label>
+            <input
+              type="number"
+              id="stockMaximo"
+              formControlName="stockMaximo"
+              class="form-control"
+              [class.error]="inventoryForm.get('stockMaximo')?.invalid && inventoryForm.get('stockMaximo')?.touched"
+              placeholder="100"
+              min="1"
+            />
+            <div *ngIf="inventoryForm.get('stockMaximo')?.invalid && inventoryForm.get('stockMaximo')?.touched" class="error-message">
+              El stock máximo es requerido y debe ser > 0
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado *</label>
+          <select
+            id="estado"
+            formControlName="estado"
+            class="form-control"
+          >
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="inventoryForm.invalid || loading">
+            <span *ngIf="loading">{{ isEditing ? 'Actualizando...' : 'Creando...' }}</span>
+            <span *ngIf="!loading">{{ isEditing ? 'Actualizar' : 'Crear' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Inventory List -->
+  <div class="inventory-content">
+    <div *ngIf="loading && inventory.length === 0" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando inventario...</p>
+    </div>
+
+    <div *ngIf="!loading && getFilteredInventory().length === 0 && inventory.length === 0" class="empty-state">
+      <div class="empty-icon">📦</div>
+      <h3>No hay inventario</h3>
+      <p>Comienza agregando productos al inventario</p>
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <span class="btn-icon">📦</span>
+        Crear Primer Inventario
+      </button>
+    </div>
+
+    <div *ngIf="!loading && getFilteredInventory().length === 0 && inventory.length > 0" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No se encontraron resultados</h3>
+      <p>No hay productos que coincidan con los filtros aplicados</p>
+      <button class="btn btn-secondary" (click)="clearFilters()">
+        Limpiar Filtros
+      </button>
+    </div>
+
+    <div *ngIf="getFilteredInventory().length > 0" class="inventory-table-container">
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Stock Actual</th>
+            <th>Stock Mín/Máx</th>
+            <th>Ubicación</th>
+            <th>Costo Promedio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getFilteredInventory(); trackBy: trackByInventoryId" 
+              [class]="'stock-' + getStockStatus(item)">
+            <td class="product-info">
+              <div class="product-name">{{ getProductName(item.productoId) }}</div>
+              <div class="product-id">ID: {{ item.productoId }}</div>
+            </td>
+            
+            <td class="stock-current">
+              <span class="stock-number" [class]="'stock-' + getStockStatus(item)">
+                {{ item.stockActual }}
+              </span>
+              <div class="stock-indicator" [class]="getStockStatus(item)"></div>
+            </td>
+            
+            <td class="stock-limits">
+              <div class="stock-range">
+                <span class="min">Mín: {{ item.stockMinimo }}</span>
+                <span class="max">Máx: {{ item.stockMaximo }}</span>
+              </div>
+            </td>
+            
+            <td class="location">
+              <span class="location-badge" *ngIf="item.ubicacion; else noLocation">
+                {{ item.ubicacion }}
+              </span>
+              <ng-template #noLocation>
+                <span class="no-location">Sin ubicación</span>
+              </ng-template>
+            </td>
+            
+            <td class="cost">
+              <span *ngIf="item.costoPromedio && item.costoPromedio > 0; else noCost">
+                ${{ item.costoPromedio | number:'1.2-2' }}
+              </span>
+              <ng-template #noCost>
+                <span class="no-cost">-</span>
+              </ng-template>
+            </td>
+            
+            <td class="status">
+              <span class="status-badge" [class]="item.estado?.toLowerCase()">
+                {{ item.estado }}
+              </span>
+            </td>
+            
+            <td class="actions">
+              <button 
+                class="btn-icon edit" 
+                (click)="openEditForm(item)" 
+                [disabled]="loading"
+                title="Editar inventario"
+              >
+                ✏️
+              </button>
+              <button 
+                class="btn-icon delete" 
+                (click)="deleteInventory(item)" 
+                [disabled]="loading"
+                title="Eliminar inventario"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

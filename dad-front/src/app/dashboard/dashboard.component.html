@@ -1,0 +1,134 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h2>Dashboard - Sistema de Farmacia</h2>
+    <p>Resumen general del sistema</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Cargando datos del dashboard...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-content">
+    
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon categories">📁</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalCategories }}</h3>
+          <p>Categorías</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon products">📦</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalProducts }}</h3>
+          <p>Productos</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon inventory">📊</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalInventory }}</h3>
+          <p>Stock Total</p>
+        </div>
+      </div>
+
+      <div class="stat-card alert" [class.danger]="stats.lowStockItems > 0">
+        <div class="stat-icon warning">⚠️</div>
+        <div class="stat-info">
+          <h3>{{ stats.lowStockItems }}</h3>
+          <p>Stock Bajo</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      
+      <!-- Recent Products -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Productos Recientes</h3>
+        </div>
+        <div class="card-body">
+          <div *ngIf="recentProducts.length === 0" class="empty-state">
+            <p>No hay productos registrados</p>
+          </div>
+          <div *ngFor="let product of recentProducts" class="product-item">
+            <div class="product-info">
+              <h4>{{ product.nombre }}</h4>
+              <p>{{ product.descripcion || 'Sin descripción' }}</p>
+              <span class="product-category">{{ getCategoryName(product.categoriaId) }}</span>
+            </div>
+            <div class="product-price">
+              ${{ product.precio | number:'1.2-2' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Overview -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Categorías</h3>
+        </div>
+        <div class="card-body">
+          <div *ngIf="categories.length === 0" class="empty-state">
+            <p>No hay categorías registradas</p>
+          </div>
+          <div *ngFor="let category of categories" class="category-item">
+            <div class="category-info">
+              <h4>{{ category.nombre }}</h4>
+              <p>{{ category.descripcion || 'Sin descripción' }}</p>
+            </div>
+            <div class="category-count">
+              {{ getProductsByCategory(category.id!) }} productos
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert -->
+      <div class="card full-width" *ngIf="stats.lowStockItems > 0">
+        <div class="card-header alert-header">
+          <h3>⚠️ Productos con Stock Bajo</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto ID</th>
+                  <th>Stock Actual</th>
+                  <th>Stock Mínimo</th>
+                  <th>Ubicación</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of lowStockProducts">
+                  <td>{{ item.productoId }}</td>
+                  <td class="stock-low">{{ item.stockActual }}</td>
+                  <td>{{ item.stockMinimo }}</td>
+                  <td>{{ item.ubicacion || 'Sin ubicación' }}</td>
+                  <td>
+                    <span class="status" [class]="item.estado?.toLowerCase()">
+                      {{ item.estado }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
