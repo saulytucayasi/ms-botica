@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ms-movimientos
+    name: ms-movimientos-service
   profiles:
     active: development
   config:
