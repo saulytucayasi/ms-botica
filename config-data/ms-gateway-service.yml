@@ -37,4 +37,22 @@ spring:
           uri: lb://ms-auth-service
           predicates:
             - Path=/auth/**
+        - id: ms-producto-service
+          uri: lb://ms-producto-service
+          predicates:
+            - Path=/productos/**
+          filters:
+            - AuthFilter
+        - id: ms-inventario-service
+          uri: lb://ms-inventario-service
+          predicates:
+            - Path=/inventario/**
+          filters:
+            - AuthFilter
+        - id: ms-movimientos-service
+          uri: lb://ms-movimientos-service
+          predicates:
+            - Path=/movimientos/**
+          filters:
+            - AuthFilter
 
