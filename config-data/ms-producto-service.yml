@@ -1,0 +1,54 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: ms-producto-service
+
+  #datasource:
+  #  url: jdbc:mysql://localhost:3306/ms_catalogo
+  #  username: root
+  #  password:
+  #  driver-class-name: com.mysql.cj.jdbc.Driver
+
+  #jpa:
+  #  hibernate:
+  #    ddl-auto: update
+  #  show-sql: true
+  datasource:
+    url: jdbc:h2:mem:ms_producto
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
+    h2:
+      console:
+        enabled: true
+        path: /h2-console
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /doc/swagger-ui.html
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8090/eureka
+  instance:
+    hostname: localhost
+
+resilience4j.circuitbreaker:
+  instances:
+    categoriaListarPorIdCB:
+      registerHealthIndicator: true
+      slidingWindowSize: 10
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowType: TIME_BASED
+      minimumNumberOfCalls: 4
+      waitDurationInOpenState: 5s
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+
+
