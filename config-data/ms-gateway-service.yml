@@ -42,7 +42,6 @@ spring:
           predicates:
             - Path=/productos/**
           filters:
-            - StripPrefix=1
             - AuthFilter
         - id: ms-inventario-service
           uri: lb://ms-inventario-service
