@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Services, Category, Product, Inventory } from '../core/service/services';
 
 @Component({
@@ -9,7 +10,7 @@ import { Services, Category, Product, Inventory } from '../core/service/services
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   loading = true;
   stats = {
     totalCategories: 0,
@@ -21,11 +22,17 @@ export class DashboardComponent implements OnInit {
   recentProducts: Product[] = [];
   lowStockProducts: Inventory[] = [];
   categories: Category[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(private services: Services) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDashboardData(): void {
@@ -36,7 +43,9 @@ export class DashboardComponent implements OnInit {
       products: this.services.getProducts(),
       inventory: this.services.getInventory(),
       lowStock: this.services.getLowStockProducts()
-    }).subscribe({
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (data) => {
         this.categories = data.categories;
         this.recentProducts = data.products.slice(0, 5); // Últimos 5 productos

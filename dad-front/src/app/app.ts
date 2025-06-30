@@ -10,8 +10,7 @@ import { AuthService } from './core/service/auth.service';
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  title = 'Sistema de Gestión de Farmacia';
-  currentUser: string | null = null;
+  title = 'Santa Cruz';
   isAuthenticated = false;
 
   constructor(
@@ -23,27 +22,29 @@ export class App implements OnInit {
   ngOnInit(): void {
     // Initialize state
     this.updateAuthState();
-    
+
     // Subscribe to authentication changes
     this.authService.currentUser$.subscribe(user => {
-      console.log('App - User changed:', user);
       this.updateAuthState();
       this.cdr.detectChanges();
     });
   }
 
   private updateAuthState(): void {
-    this.currentUser = this.authService.getCurrentUser();
     this.isAuthenticated = this.authService.isAuthenticated();
-    console.log('App - Updated state:', { user: this.currentUser, authenticated: this.isAuthenticated });
   }
 
   logout(): void {
-    console.log('App - Logout clicked');
+    // Clear auth state immediately
+    this.isAuthenticated = false;
+
+    // Perform logout
     this.authService.logout();
-    this.updateAuthState();
-    this.router.navigate(['/login']).then(() => {
-      console.log('App - Navigated to login');
+
+    // Navigate to login
+    this.router.navigate(['/login'], { replaceUrl: true }).then(() => {
+      // Force change detection after navigation
+      this.cdr.detectChanges();
     });
   }
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { tap, takeUntil } from 'rxjs/operators';
 import { Services, AuthResponse, LoginRequest, AuthUser } from './services';
 
 @Injectable({
@@ -11,6 +11,7 @@ export class AuthService {
   private userKey = 'current_user';
   private currentUserSubject = new BehaviorSubject<string | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private destroy$ = new Subject<void>();
 
   constructor(private services: Services) {
     // Initialize with current user if exists
@@ -23,12 +24,9 @@ export class AuthService {
   login(loginRequest: LoginRequest): Observable<AuthResponse> {
     return this.services.login(loginRequest).pipe(
       tap(response => {
-        console.log('AuthService - Setting user:', response.userName);
         this.setToken(response.token);
         this.setCurrentUser(response.userName);
         this.currentUserSubject.next(response.userName);
-        console.log('AuthService - isAuthenticated:', this.isAuthenticated());
-        console.log('AuthService - getCurrentUser:', this.getCurrentUser());
       })
     );
   }
@@ -38,15 +36,15 @@ export class AuthService {
   }
 
   logout(): void {
-    console.log('AuthService - Logout called');
+    // Cancel all pending requests
+    this.destroy$.next();
+    this.destroy$.complete();
+    // Recreate the destroy subject for future use
+    this.destroy$ = new Subject<void>();
+    
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
     this.currentUserSubject.next(null);
-    console.log('AuthService - After logout:', {
-      token: this.getToken(),
-      user: this.getCurrentUser(),
-      isAuthenticated: this.isAuthenticated()
-    });
   }
 
   isAuthenticated(): boolean {

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Services, Category as CategoryInterface } from '../core/service/services';
 
 @Component({
@@ -10,7 +12,7 @@ import { Services, Category as CategoryInterface } from '../core/service/service
   templateUrl: './category.html',
   styleUrl: './category.scss'
 })
-export class CategoryComponent implements OnInit {
+export class CategoryComponent implements OnInit, OnDestroy {
   categories: CategoryInterface[] = [];
   categoryForm: FormGroup;
   loading = false;
@@ -18,6 +20,7 @@ export class CategoryComponent implements OnInit {
   editingCategory: CategoryInterface | null = null;
   error = '';
   success = '';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -33,19 +36,26 @@ export class CategoryComponent implements OnInit {
     this.loadCategories();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadCategories(): void {
     this.loading = true;
-    this.services.getCategories().subscribe({
-      next: (categories) => {
-        this.categories = categories;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-        this.error = 'Error al cargar las categorías';
-        this.loading = false;
-      }
-    });
+    this.services.getCategories()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories) => {
+          this.categories = categories;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading categories:', error);
+          this.error = 'Error al cargar las categorías';
+          this.loading = false;
+        }
+      });
   }
 
   openCreateForm(): void {
