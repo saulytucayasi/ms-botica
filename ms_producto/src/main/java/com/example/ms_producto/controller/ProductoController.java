@@ -28,9 +28,15 @@ public class ProductoController {
         return productoService.Save(producto);
     }
 
-    @PutMapping
-    public Producto update(@RequestBody Producto producto) {
+    @PutMapping("/{id}")
+    public Producto update(@PathVariable int id, @RequestBody Producto producto) {
+        producto.setId(id);
         return productoService.update(producto);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable int id) {
+        productoService.delete(id);
     }
 
 }

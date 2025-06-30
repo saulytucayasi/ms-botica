@@ -26,7 +26,7 @@ public class ProductoServiceImpl implements ProductoService {
     public Producto findById(int id) {
         Producto producto = productoRepository.findById(id).get();
         producto.setCategoriaDto(catalogoFeign.buscarCategoria(producto.getCategoriaId()).getBody());
-        return productoRepository.findById(id).get();
+        return producto;
     }
 
     @Override
@@ -37,5 +37,10 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public Producto update(Producto producto) {
         return productoRepository.save(producto);
+    }
+
+    @Override
+    public void delete(int id) {
+        productoRepository.deleteById(id);
     }
 }
