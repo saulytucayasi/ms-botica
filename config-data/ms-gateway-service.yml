@@ -49,4 +49,10 @@ spring:
             - Path=/inventario/**
           filters:
             - AuthFilter
+        - id: ms-movimientos-service
+          uri: lb://ms-movimientos-service
+          predicates:
+            - Path=/movimientos/**
+          filters:
+            - AuthFilter
 
