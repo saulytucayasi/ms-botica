@@ -1,6 +1,7 @@
 package com.example.ms_ventas.entity;
 
 import com.example.ms_ventas.enums.EstadoVenta;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +59,7 @@ public class Venta {
     private String observaciones;
     
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<VentaItem> items;
     
     @PrePersist

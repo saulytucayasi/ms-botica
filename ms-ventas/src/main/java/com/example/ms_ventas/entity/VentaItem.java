@@ -1,5 +1,6 @@
 package com.example.ms_ventas.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class VentaItem {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venta_id", nullable = false)
+    @JsonBackReference
     private Venta venta;
     
     @Column(name = "producto_id", nullable = false)

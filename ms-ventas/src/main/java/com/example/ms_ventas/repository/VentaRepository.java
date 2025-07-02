@@ -20,6 +20,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     
     List<Venta> findByClienteIdOrderByFechaVentaDesc(Long clienteId);
     
+    List<Venta> findAllByOrderByFechaVentaDesc();
+    
     List<Venta> findByEstado(EstadoVenta estado);
     
     Page<Venta> findByClienteId(Long clienteId, Pageable pageable);

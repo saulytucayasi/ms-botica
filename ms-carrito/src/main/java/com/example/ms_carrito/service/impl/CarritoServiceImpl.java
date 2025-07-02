@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,14 +29,12 @@ public class CarritoServiceImpl implements CarritoService {
     private final ProductoFeign productoFeign;
     
     @Override
-    @Transactional(readOnly = true)
     public Carrito obtenerCarritoPorCliente(Long clienteId) {
         return carritoRepository.findByClienteIdWithItems(clienteId)
                 .orElseGet(() -> crearNuevoCarrito(clienteId, null));
     }
     
     @Override
-    @Transactional(readOnly = true)
     public Carrito obtenerCarritoPorSession(String sessionId) {
         return carritoRepository.findBySessionIdAndActivoTrue(sessionId)
                 .orElseGet(() -> crearNuevoCarrito(null, sessionId));
@@ -85,7 +84,7 @@ public class CarritoServiceImpl implements CarritoService {
     @Override
     public void limpiarCarrito(Long clienteId) {
         Carrito carrito = obtenerCarritoPorCliente(clienteId);
-        carritoItemRepository.deleteAll(carrito.getItems());
+        carritoItemRepository.deleteAllByCarritoId(carrito.getId());
         carrito.setTotal(BigDecimal.ZERO);
         carritoRepository.save(carrito);
     }
@@ -110,12 +109,16 @@ public class CarritoServiceImpl implements CarritoService {
                 .sessionId(sessionId)
                 .total(BigDecimal.ZERO)
                 .activo(true)
+                .items(new ArrayList<>())
                 .build();
         
         return carritoRepository.save(carrito);
     }
     
     private Carrito agregarItemAlCarrito(Carrito carrito, Long productoId, Integer cantidad) {
+        // Obtener precio del producto via Feign
+        BigDecimal precioUnitario = obtenerPrecioProducto(productoId);
+        
         Optional<CarritoItem> itemExistente = carritoItemRepository
                 .findByCarritoIdAndProductoId(carrito.getId(), productoId);
         
@@ -125,9 +128,6 @@ public class CarritoServiceImpl implements CarritoService {
             item.calcularSubtotal();
             carritoItemRepository.save(item);
         } else {
-            // Obtener precio del producto via Feign
-            BigDecimal precioUnitario = obtenerPrecioProducto(productoId);
-            
             CarritoItem nuevoItem = CarritoItem.builder()
                     .carrito(carrito)
                     .productoId(productoId)
@@ -136,7 +136,12 @@ public class CarritoServiceImpl implements CarritoService {
                     .build();
             
             nuevoItem.calcularSubtotal();
-            carritoItemRepository.save(nuevoItem);
+            CarritoItem itemGuardado = carritoItemRepository.save(nuevoItem);
+            
+            // Agregar el item a la lista del carrito si está inicializada
+            if (carrito.getItems() != null) {
+                carrito.getItems().add(itemGuardado);
+            }
         }
         
         calcularTotalCarrito(carrito);

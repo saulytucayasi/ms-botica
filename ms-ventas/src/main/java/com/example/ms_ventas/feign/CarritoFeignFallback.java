@@ -29,6 +29,21 @@ public class CarritoFeignFallback implements CarritoFeign {
     }
     
     @Override
+    public ResponseEntity<CarritoDto> obtenerCarritoPorSession(String sessionId) {
+        log.warn("Fallback ejecutado para obtener carrito de la sesión: {}", sessionId);
+        
+        CarritoDto carritoFallback = new CarritoDto();
+        carritoFallback.setId(0L);
+        carritoFallback.setSessionId(sessionId);
+        carritoFallback.setFechaCreacion(LocalDateTime.now());
+        carritoFallback.setTotal(BigDecimal.ZERO);
+        carritoFallback.setActivo(false);
+        carritoFallback.setItems(new ArrayList<>());
+        
+        return ResponseEntity.ok(carritoFallback);
+    }
+    
+    @Override
     public ResponseEntity<Void> desactivarCarrito(Long carritoId) {
         log.warn("Fallback ejecutado para desactivar carrito: {}", carritoId);
         return ResponseEntity.ok().build();

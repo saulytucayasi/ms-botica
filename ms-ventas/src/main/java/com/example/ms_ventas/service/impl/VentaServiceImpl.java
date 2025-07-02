@@ -24,8 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +42,7 @@ public class VentaServiceImpl implements VentaService {
     public Venta crearVentaDesdeCarrito(Long clienteId, Long carritoId) {
         log.info("Creando venta desde carrito {} para cliente {}", carritoId, clienteId);
         
-        // Obtener datos del carrito
+        // Obtener datos del carrito por cliente
         ResponseEntity<CarritoDto> carritoResponse = carritoFeign.obtenerCarritoPorCliente(clienteId);
         CarritoDto carrito = carritoResponse.getBody();
         
@@ -81,6 +80,47 @@ public class VentaServiceImpl implements VentaService {
     }
     
     @Override
+    public Venta crearVentaDesdeCarritoPorSession(String sessionId, Long carritoId) {
+        log.info("Creando venta desde carrito {} para sesión {}", carritoId, sessionId);
+        
+        // Obtener datos del carrito por sesión
+        ResponseEntity<CarritoDto> carritoResponse = carritoFeign.obtenerCarritoPorSession(sessionId);
+        CarritoDto carrito = carritoResponse.getBody();
+        
+        if (carrito == null || carrito.getItems().isEmpty()) {
+            throw new RuntimeException("Carrito vacío o no encontrado");
+        }
+        
+        String numeroVenta = generarNumeroVenta();
+        
+        Venta venta = Venta.builder()
+                .numeroVenta(numeroVenta)
+                .clienteId(null) // Cliente anónimo
+                .carritoId(carritoId)
+                .estado(EstadoVenta.PENDIENTE)
+                .subtotal(BigDecimal.ZERO)
+                .impuestos(BigDecimal.ZERO)
+                .descuento(BigDecimal.ZERO)
+                .total(BigDecimal.ZERO)
+                .build();
+        
+        venta = ventaRepository.save(venta);
+        
+        // Crear items desde carrito
+        crearItemsDesdeCarrito(venta, carrito);
+        
+        // Calcular totales
+        calcularTotalesVenta(venta);
+        venta = ventaRepository.save(venta);
+        
+        // Desactivar carrito
+        carritoFeign.desactivarCarrito(carritoId);
+        
+        log.info("Venta anónima creada con ID: {} y número: {}", venta.getId(), venta.getNumeroVenta());
+        return venta;
+    }
+    
+    @Override
     @Transactional(readOnly = true)
     public Venta obtenerVentaPorId(Long ventaId) {
         return ventaRepository.findByIdWithItems(ventaId)
@@ -97,6 +137,12 @@ public class VentaServiceImpl implements VentaService {
     @Transactional(readOnly = true)
     public List<Venta> obtenerVentasPorCliente(Long clienteId) {
         return ventaRepository.findByClienteIdOrderByFechaVentaDesc(clienteId);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Venta> obtenerTodasLasVentas() {
+        return ventaRepository.findAllByOrderByFechaVentaDesc();
     }
     
     @Override
@@ -223,12 +269,17 @@ public class VentaServiceImpl implements VentaService {
             ResponseEntity<InventarioDto> inventarioResponse = inventarioFeign.obtenerInventarioPorProducto(item.getProductoId());
             InventarioDto inventario = inventarioResponse.getBody();
             
-            if (inventario != null && inventario.getCantidad() < item.getCantidad()) {
+            if (inventario != null && inventario.getStockActual() < item.getCantidad()) {
                 throw new RuntimeException("Stock insuficiente para producto: " + item.getProductoNombre());
             }
             
             // Reducir inventario
-            inventarioFeign.reducirInventario(item.getProductoId(), item.getCantidad());
+            Map<String, Object> request = new HashMap<>();
+            request.put("productoId", item.getProductoId());
+            request.put("cantidad", item.getCantidad());
+            request.put("tipoMovimiento", "SALIDA");
+            
+            inventarioFeign.actualizarStock(request);
         }
     }
     
@@ -237,7 +288,12 @@ public class VentaServiceImpl implements VentaService {
         
         for (VentaItem item : items) {
             try {
-                inventarioFeign.restaurarInventario(item.getProductoId(), item.getCantidad());
+                Map<String, Object> request = new HashMap<>();
+                request.put("productoId", item.getProductoId());
+                request.put("cantidad", item.getCantidad());
+                request.put("tipoMovimiento", "ENTRADA");
+                
+                inventarioFeign.actualizarStock(request);
             } catch (Exception e) {
                 log.error("Error al restaurar inventario para producto: {}", item.getProductoId(), e);
             }

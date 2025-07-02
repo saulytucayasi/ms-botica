@@ -1,5 +1,6 @@
 package com.example.ms_carrito.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class CarritoItem {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "carrito_id", nullable = false)
+    @JsonBackReference
     private Carrito carrito;
     
     @Column(name = "producto_id", nullable = false)

@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CrearVentaRequest {
     
-    @NotNull(message = "El ID del cliente es requerido")
+    // Para clientes registrados
     private Long clienteId;
+    
+    // Para clientes anónimos (por sesión)
+    private String sessionId;
     
     @NotNull(message = "El ID del carrito es requerido")
     private Long carritoId;

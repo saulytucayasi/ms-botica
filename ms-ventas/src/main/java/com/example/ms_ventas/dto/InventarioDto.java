@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class InventarioDto {
     private Long id;
     private Long productoId;
-    private Integer cantidad;
+    private Integer stockActual;
     private Integer stockMinimo;
     private Integer stockMaximo;
 }

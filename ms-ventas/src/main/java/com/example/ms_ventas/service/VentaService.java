@@ -14,11 +14,15 @@ public interface VentaService {
     
     Venta crearVentaDesdeCarrito(Long clienteId, Long carritoId);
     
+    Venta crearVentaDesdeCarritoPorSession(String sessionId, Long carritoId);
+    
     Venta obtenerVentaPorId(Long ventaId);
     
     Optional<Venta> obtenerVentaPorNumero(String numeroVenta);
     
     List<Venta> obtenerVentasPorCliente(Long clienteId);
+    
+    List<Venta> obtenerTodasLasVentas();
     
     Page<Venta> obtenerVentasPorClientePaginado(Long clienteId, Pageable pageable);
     
