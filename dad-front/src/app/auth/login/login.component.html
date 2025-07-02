@@ -1,51 +1,64 @@
 <div class="login-container">
-  <div class="login-card">
+  <div class="login-card modern-card animate-fade-in">
     <div class="login-header">
-      <h2>Iniciar Sesión</h2>
+      <div class="brand-logo">
+        <h2>Botica Santa Cruz</h2>
+      </div>
       <p>Sistema de Gestión de Farmacia</p>
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       <div class="form-group">
-        <label for="userName">Usuario:</label>
+        <label for="userName">
+          <app-icon name="users" size="icon-small" color="#495057"></app-icon>
+          Usuario:
+        </label>
         <input
           type="text"
           id="userName"
           formControlName="userName"
-          class="form-control"
+          class="form-control modern-input"
           [class.error]="loginForm.get('userName')?.invalid && loginForm.get('userName')?.touched"
           placeholder="Ingrese su usuario"
         />
         <div *ngIf="loginForm.get('userName')?.invalid && loginForm.get('userName')?.touched" class="error-message">
+          <app-icon name="warning" size="icon-small" color="#dc3545"></app-icon>
           El usuario es requerido
         </div>
       </div>
 
       <div class="form-group">
-        <label for="password">Contraseña:</label>
+        <label for="password">
+          <app-icon name="edit" size="icon-small" color="#495057"></app-icon>
+          Contraseña:
+        </label>
         <input
           type="password"
           id="password"
           formControlName="password"
-          class="form-control"
+          class="form-control modern-input"
           [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
           placeholder="Ingrese su contraseña"
         />
         <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
+          <app-icon name="warning" size="icon-small" color="#dc3545"></app-icon>
           La contraseña debe tener al menos 6 caracteres
         </div>
       </div>
 
-      <div *ngIf="error" class="alert alert-error">
+      <div *ngIf="error" class="alert alert-error modern-card">
+        <app-icon name="error" size="icon-small" color="#dc3545"></app-icon>
         {{ error }}
       </div>
 
       <div class="form-actions">
         <button 
           type="submit" 
-          class="btn btn-primary" 
+          class="btn btn-primary modern-btn" 
           [disabled]="loginForm.invalid || loading"
         >
+          <app-icon *ngIf="loading" name="loading" size="icon-small"></app-icon>
+          <app-icon *ngIf="!loading" name="check" size="icon-small"></app-icon>
           <span *ngIf="loading">Cargando...</span>
           <span *ngIf="!loading">Iniciar Sesión</span>
         </button>

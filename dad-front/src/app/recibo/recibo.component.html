@@ -1,0 +1,124 @@
+<div class="recibo-container">
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    Cargando recibo...
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    <h3>Error</h3>
+    <p>{{ error }}</p>
+    <button type="button" (click)="volverAVentas()" class="btn btn-primary">
+      Volver a Ventas
+    </button>
+  </div>
+
+  <!-- Receipt Content -->
+  <div *ngIf="venta && !loading" class="recibo-content">
+    <!-- Header -->
+    <div class="recibo-header">
+      <div class="company-info">
+        <h1>FARMACIA BOTICA</h1>
+        <p>Sistema de Gestión Farmacéutica</p>
+        <p>RUC: 20123456789</p>
+        <p>Dir: Av. Principal 123, Lima, Perú</p>
+        <p>Tel: (01) 234-5678</p>
+      </div>
+      <div class="recibo-type">
+        <h2>BOLETA DE VENTA</h2>
+        <p><strong>{{ venta.numeroVenta }}</strong></p>
+      </div>
+    </div>
+
+    <!-- Customer and Sale Info -->
+    <div class="info-section">
+      <div class="info-row">
+        <div class="info-item">
+          <strong>Fecha:</strong> {{ formatDate(venta.fechaVenta!) }}
+        </div>
+        <div class="info-item">
+          <strong>Cliente:</strong> {{ venta.clienteId ? 'Cliente #' + venta.clienteId : 'Cliente Anónimo' }}
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-item">
+          <strong>Estado:</strong> 
+          <span class="status" [ngClass]="'status-' + venta.estado.toLowerCase()">
+            {{ venta.estado }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="venta.observaciones">
+          <strong>Observaciones:</strong> {{ venta.observaciones }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="items-section" *ngIf="venta.items && venta.items.length > 0">
+      <h3>Detalle de Productos</h3>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Unit.</th>
+            <th>Descuento</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of venta.items">
+            <td>{{ item.productoNombre }}</td>
+            <td class="text-center">{{ item.cantidad }}</td>
+            <td class="text-right">${{ item.precioUnitario.toFixed(2) }}</td>
+            <td class="text-right">${{ item.descuentoItem.toFixed(2) }}</td>
+            <td class="text-right">${{ item.subtotal.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals Section -->
+    <div class="totals-section">
+      <div class="totals-table">
+        <div class="total-row">
+          <span class="label">Subtotal:</span>
+          <span class="value">${{ venta.subtotal.toFixed(2) }}</span>
+        </div>
+        <div class="total-row">
+          <span class="label">Descuento:</span>
+          <span class="value">-${{ venta.descuento.toFixed(2) }}</span>
+        </div>
+        <div class="total-row">
+          <span class="label">IGV (16%):</span>
+          <span class="value">${{ venta.impuestos.toFixed(2) }}</span>
+        </div>
+        <div class="total-row final-total">
+          <span class="label">TOTAL:</span>
+          <span class="value">${{ venta.total.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="recibo-footer">
+      <p>¡Gracias por su compra!</p>
+      <p>Este documento es su comprobante de compra</p>
+      <p class="fecha-emision">Emitido el {{ formatDate(venta.fechaActualizacion!) }}</p>
+    </div>
+
+    <!-- Action Buttons (no-print) -->
+    <div class="action-buttons no-print">
+      <button type="button" (click)="imprimirRecibo()" class="btn btn-primary">
+        🖨️ Imprimir Recibo
+      </button>
+      <button type="button" (click)="volverAVentas()" class="btn btn-secondary">
+        📋 Ver Todas las Ventas
+      </button>
+      <button type="button" (click)="nuevaVenta()" class="btn btn-success">
+        🛒 Nueva Venta
+      </button>
+    </div>
+  </div>
+</div>

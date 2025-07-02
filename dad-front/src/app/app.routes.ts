@@ -5,6 +5,9 @@ import { CategoryComponent } from './category/category';
 import { ProductsComponent } from './products/products.component';
 import { InventoryComponent } from './inventory/inventory.component';
 import { UsersComponent } from './users/users.component';
+import { CarritoComponent } from './carrito/carrito.component';
+import { VentasComponent } from './ventas/ventas.component';
+import { ReciboComponent } from './recibo/recibo.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -33,6 +36,21 @@ export const routes: Routes = [
   { 
     path: 'users', 
     component: UsersComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'carrito', 
+    component: CarritoComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'ventas', 
+    component: VentasComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'recibo/:id', 
+    component: ReciboComponent, 
     canActivate: [AuthGuard] 
   },
   { path: '**', redirectTo: '/login' }

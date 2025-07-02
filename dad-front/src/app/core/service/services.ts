@@ -46,6 +46,64 @@ export interface AuthResponse {
   userName: string;
 }
 
+export interface CarritoItem {
+  id?: number;
+  productoId: number;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal?: number;
+  producto?: Product;
+}
+
+export interface Carrito {
+  id?: number;
+  clienteId?: number;
+  sessionId?: string;
+  fechaCreacion?: string;
+  fechaActualizacion?: string;
+  total: number;
+  activo: boolean;
+  items: CarritoItem[];
+}
+
+export interface VentaItem {
+  id?: number;
+  productoId: number;
+  productoNombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  descuentoItem: number;
+  subtotal: number;
+}
+
+export interface Venta {
+  id?: number;
+  numeroVenta: string;
+  clienteId?: number;
+  carritoId: number;
+  fechaVenta?: string;
+  fechaActualizacion?: string;
+  estado: string;
+  subtotal: number;
+  impuestos: number;
+  descuento: number;
+  total: number;
+  observaciones?: string;
+  items?: VentaItem[];
+}
+
+export interface CrearVentaRequest {
+  clienteId?: number;
+  sessionId?: string;
+  carritoId: number;
+  observaciones?: string;
+}
+
+export interface AgregarCarritoRequest {
+  productoId: number;
+  cantidad: number;
+}
+
 @Injectable({providedIn: 'root'})
 export class Services {
   constructor(private http: HttpClient) {}
@@ -132,5 +190,55 @@ export class Services {
 
   getInventoryByLocation(location: string): Observable<Inventory[]> {
     return this.http.get<Inventory[]>(`inventario/ubicacion/${location}`);
+  }
+
+  // CARRITO SERVICES
+  getCarritoByCliente(clienteId: number): Observable<Carrito> {
+    return this.http.get<Carrito>(`carrito/cliente/${clienteId}`);
+  }
+
+  getCarritoBySession(sessionId: string): Observable<Carrito> {
+    return this.http.get<Carrito>(`carrito/session/${sessionId}`);
+  }
+
+  agregarProductoAlCarrito(clienteId: number, request: AgregarCarritoRequest): Observable<Carrito> {
+    return this.http.post<Carrito>(`carrito/cliente/${clienteId}/agregar`, request);
+  }
+
+  agregarProductoAlCarritoPorSession(sessionId: string, request: AgregarCarritoRequest): Observable<Carrito> {
+    return this.http.post<Carrito>(`carrito/session/${sessionId}/agregar`, request);
+  }
+
+  actualizarCantidadItem(clienteId: number, productoId: number, cantidad: number): Observable<Carrito> {
+    return this.http.put<Carrito>(`carrito/cliente/${clienteId}/producto/${productoId}`, { cantidad });
+  }
+
+  eliminarProductoDelCarrito(clienteId: number, productoId: number): Observable<Carrito> {
+    return this.http.delete<Carrito>(`carrito/cliente/${clienteId}/producto/${productoId}`);
+  }
+
+  limpiarCarrito(clienteId: number): Observable<void> {
+    return this.http.delete<void>(`carrito/cliente/${clienteId}/limpiar`);
+  }
+
+  // VENTAS SERVICES
+  realizarVenta(request: CrearVentaRequest): Observable<Venta> {
+    return this.http.post<Venta>('ventas/realizar', request);
+  }
+
+  getVentaById(ventaId: number): Observable<Venta> {
+    return this.http.get<Venta>(`ventas/${ventaId}`);
+  }
+
+  getVentaByNumero(numeroVenta: string): Observable<Venta> {
+    return this.http.get<Venta>(`ventas/numero/${numeroVenta}`);
+  }
+
+  getVentasByCliente(clienteId: number): Observable<Venta[]> {
+    return this.http.get<Venta[]>(`ventas/cliente/${clienteId}`);
+  }
+
+  getAllVentas(): Observable<Venta[]> {
+    return this.http.get<Venta[]>('ventas');
   }
 }

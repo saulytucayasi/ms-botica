@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/carrito")
+@RequestMapping("/carrito")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Carrito", description = "Gestión del carrito de compras")

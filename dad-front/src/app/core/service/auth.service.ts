@@ -16,7 +16,10 @@ export class AuthService {
   constructor(private services: Services) {
     // Initialize with current user if exists
     const currentUser = this.getCurrentUser();
-    if (currentUser && this.getToken()) {
+    const token = this.getToken();
+    console.log('AuthService constructor - user:', currentUser, 'token exists:', !!token);
+    
+    if (currentUser && token) {
       this.currentUserSubject.next(currentUser);
     }
   }
@@ -24,9 +27,11 @@ export class AuthService {
   login(loginRequest: LoginRequest): Observable<AuthResponse> {
     return this.services.login(loginRequest).pipe(
       tap(response => {
+        console.log('Login response:', response);
         this.setToken(response.token);
         this.setCurrentUser(response.userName);
         this.currentUserSubject.next(response.userName);
+        console.log('User set in service:', response.userName);
       })
     );
   }

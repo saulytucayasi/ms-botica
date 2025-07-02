@@ -1,26 +1,58 @@
-<div *ngIf="isAuthenticated" class="app-layout">
+<div *ngIf="isAuthenticated" class="app-layout animate-fade-in">
   <!-- Navigation Header -->
-  <nav class="navbar">
+  <nav class="navbar modern-navbar">
     <div class="navbar-brand">
-      <h1>{{ title }}</h1>
+      <div class="brand-logo">
+        <app-icon name="products" size="icon-large" color="#007bff"></app-icon>
+        <h1>{{ title }}</h1>
+      </div>
     </div>
-
+    
     <div class="navbar-nav">
-      <button class="nav-link" (click)="navigateTo('/dashboard')">Dashboard</button>
-      <button class="nav-link" (click)="navigateTo('/categories')">Categorías</button>
-      <button class="nav-link" (click)="navigateTo('/products')">Productos</button>
-      <button class="nav-link" (click)="navigateTo('/inventory')">Inventario</button>
-      <button class="nav-link" (click)="navigateTo('/users')">Usuarios</button>
+      <button class="nav-link" (click)="navigateTo('/dashboard')" [class.active]="currentRoute === '/dashboard'">
+        <app-icon name="dashboard" size="icon-small"></app-icon>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-link" (click)="navigateTo('/categories')" [class.active]="currentRoute === '/categories'">
+        <app-icon name="categories" size="icon-small"></app-icon>
+        <span>Categorías</span>
+      </button>
+      <button class="nav-link" (click)="navigateTo('/products')" [class.active]="currentRoute === '/products'">
+        <app-icon name="products" size="icon-small"></app-icon>
+        <span>Productos</span>
+      </button>
+      <button class="nav-link" (click)="navigateTo('/inventory')" [class.active]="currentRoute === '/inventory'">
+        <app-icon name="inventory" size="icon-small"></app-icon>
+        <span>Inventario</span>
+      </button>
+      <button class="nav-link carrito-link" (click)="navigateTo('/carrito')" [class.active]="currentRoute === '/carrito'">
+        <app-icon name="carrito" size="icon-small"></app-icon>
+        <span>Carrito</span>
+        <span class="cart-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+      </button>
+      <button class="nav-link" (click)="navigateTo('/ventas')" [class.active]="currentRoute === '/ventas'">
+        <app-icon name="ventas" size="icon-small"></app-icon>
+        <span>Ventas</span>
+      </button>
+      <button class="nav-link" (click)="navigateTo('/users')" [class.active]="currentRoute === '/users'">
+        <app-icon name="users" size="icon-small"></app-icon>
+        <span>Usuarios</span>
+      </button>
     </div>
 
     <div class="navbar-user">
-      <button class="logout-btn" (click)="logout()">Cerrar Sesión</button>
+      <button class="logout-btn modern-btn" (click)="logout()">
+        <app-icon name="logout" size="icon-small"></app-icon>
+        <span>Salir</span>
+      </button>
     </div>
   </nav>
 
   <!-- Main Content -->
   <main class="main-content">
-    <router-outlet />
+    <div class="content-wrapper">
+      <router-outlet />
+    </div>
   </main>
 </div>
 

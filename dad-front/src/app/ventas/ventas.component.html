@@ -1,0 +1,202 @@
+<div class="ventas-container">
+  <div class="header">
+    <h2>Gestión de Ventas</h2>
+    <div class="actions">
+      <button 
+        type="button" 
+        (click)="goToCarrito()" 
+        class="btn btn-primary"
+      >
+        Ver Carrito
+      </button>
+      <button 
+        type="button" 
+        (click)="toggleCheckout()" 
+        class="btn btn-success"
+        [disabled]="!carrito || !carrito.items || carrito.items.length === 0"
+      >
+        {{ showCheckout ? 'Cancelar' : 'Realizar Venta' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    Procesando...
+  </div>
+
+  <!-- Checkout Section -->
+  <div *ngIf="showCheckout" class="checkout-section">
+    <h4>Confirmar Venta</h4>
+    <div *ngIf="carrito && carrito.items && carrito.items.length > 0" class="cart-summary">
+      <h5>Resumen del Carrito</h5>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Producto ID</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of carrito.items">
+              <td>{{ item.productoId }}</td>
+              <td>{{ item.cantidad }}</td>
+              <td>${{ item.precioUnitario }}</td>
+              <td>${{ item.subtotal }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="total-row">
+        <strong>Total: ${{ carrito.total }}</strong>
+      </div>
+      <div class="checkout-actions">
+        <button 
+          type="button" 
+          (click)="realizarVenta()" 
+          class="btn btn-success"
+          [disabled]="loading"
+        >
+          Confirmar Venta
+        </button>
+        <button 
+          type="button" 
+          (click)="toggleCheckout()" 
+          class="btn btn-secondary"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ventas List -->
+  <div class="ventas-list" *ngIf="!showCheckout">
+    <h4>Historial de Ventas</h4>
+    <div *ngIf="ventas.length === 0 && !loading" class="no-ventas">
+      <p>No hay ventas registradas para este cliente.</p>
+    </div>
+    
+    <div *ngIf="ventas.length > 0" class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Subtotal</th>
+            <th>Impuestos</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let venta of ventas">
+            <td>{{ venta.numeroVenta }}</td>
+            <td>{{ formatDate(venta.fechaVenta!) }}</td>
+            <td>
+              <span class="badge" [ngClass]="getEstadoClass(venta.estado)">
+                {{ venta.estado }}
+              </span>
+            </td>
+            <td>${{ venta.subtotal }}</td>
+            <td>${{ venta.impuestos }}</td>
+            <td><strong>${{ venta.total }}</strong></td>
+            <td>
+              <button 
+                type="button" 
+                (click)="loadVentaDetails(venta.id!)" 
+                class="btn btn-info btn-sm"
+              >
+                Ver Detalles
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Venta Details Modal -->
+  <div *ngIf="selectedVenta" class="modal-overlay" (click)="closeVentaDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>Detalles de Venta</h4>
+        <button type="button" class="btn-close" (click)="closeVentaDetails()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="venta-info">
+          <div class="info-row">
+            <strong>Número de Venta:</strong> {{ selectedVenta.numeroVenta }}
+          </div>
+          <div class="info-row">
+            <strong>Fecha:</strong> {{ formatDate(selectedVenta.fechaVenta!) }}
+          </div>
+          <div class="info-row">
+            <strong>Estado:</strong> 
+            <span class="badge" [ngClass]="getEstadoClass(selectedVenta.estado)">
+              {{ selectedVenta.estado }}
+            </span>
+          </div>
+          <div class="info-row">
+            <strong>Cliente ID:</strong> {{ selectedVenta.clienteId }}
+          </div>
+          <div class="info-row" *ngIf="selectedVenta.observaciones">
+            <strong>Observaciones:</strong> {{ selectedVenta.observaciones }}
+          </div>
+        </div>
+
+        <div *ngIf="selectedVenta.items && selectedVenta.items.length > 0" class="items-section">
+          <h5>Productos</h5>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>Precio Unit.</th>
+                  <th>Descuento</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of selectedVenta.items">
+                  <td>{{ item.productoNombre }}</td>
+                  <td>{{ item.cantidad }}</td>
+                  <td>${{ item.precioUnitario }}</td>
+                  <td>${{ item.descuentoItem }}</td>
+                  <td>${{ item.subtotal }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="totals-section">
+          <div class="total-row">
+            <strong>Subtotal:</strong> ${{ selectedVenta.subtotal }}
+          </div>
+          <div class="total-row">
+            <strong>Impuestos:</strong> ${{ selectedVenta.impuestos }}
+          </div>
+          <div class="total-row">
+            <strong>Descuento:</strong> ${{ selectedVenta.descuento }}
+          </div>
+          <div class="total-row final-total">
+            <strong>Total:</strong> ${{ selectedVenta.total }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,17 +1,22 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/service/auth.service';
+import { IconComponent } from './shared/components/icons/icon.component';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, IconComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  title = 'Santa Cruz';
+  title = 'Botica Santa Cruz';
+  currentUser: string | null = null;
   isAuthenticated = false;
+  currentRoute: string = '';
+  cartItemCount: number = 0;
 
   constructor(
     private authService: AuthService,
@@ -20,27 +25,56 @@ export class App implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Initialize state
-    this.updateAuthState();
-
+    // Initialize state first
+    this.initializeAuthState();
+    
     // Subscribe to authentication changes
     this.authService.currentUser$.subscribe(user => {
-      this.updateAuthState();
+      console.log('Auth state changed, user:', user);
+      this.currentUser = user;
+      this.isAuthenticated = this.authService.isAuthenticated();
       this.cdr.detectChanges();
     });
+
+    // Track current route for active nav highlighting
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentRoute = event.url;
+    });
+
+    // Initialize current route
+    this.currentRoute = this.router.url;
   }
 
-  private updateAuthState(): void {
-    this.isAuthenticated = this.authService.isAuthenticated();
+  private initializeAuthState(): void {
+    const user = this.authService.getCurrentUser();
+    const isAuth = this.authService.isAuthenticated();
+    
+    console.log('Initializing auth state - user:', user, 'isAuth:', isAuth);
+    
+    this.currentUser = user;
+    this.isAuthenticated = isAuth;
+    
+    // If we have a user but the subject hasn't been initialized, set it
+    if (user && isAuth) {
+      this.authService.currentUser$.subscribe(currentSubjectUser => {
+        if (!currentSubjectUser) {
+          console.log('Setting user in subject:', user);
+          // Need to trigger the subject with current user
+        }
+      });
+    }
   }
 
   logout(): void {
     // Clear auth state immediately
+    this.currentUser = null;
     this.isAuthenticated = false;
-
+    
     // Perform logout
     this.authService.logout();
-
+    
     // Navigate to login
     this.router.navigate(['/login'], { replaceUrl: true }).then(() => {
       // Force change detection after navigation

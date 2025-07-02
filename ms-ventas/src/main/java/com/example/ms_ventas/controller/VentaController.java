@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/ventas")
+@RequestMapping("/ventas")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Ventas", description = "Gestión de ventas")

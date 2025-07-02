@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 @FeignClient(name = "ms-carrito-service", fallback = CarritoFeignFallback.class)
 public interface CarritoFeign {
     
-    @GetMapping("/api/carrito/cliente/{clienteId}")
+    @GetMapping("/carrito/cliente/{clienteId}")
     ResponseEntity<CarritoDto> obtenerCarritoPorCliente(@PathVariable Long clienteId);
     
-    @GetMapping("/api/carrito/session/{sessionId}")
+    @GetMapping("/carrito/session/{sessionId}")
     ResponseEntity<CarritoDto> obtenerCarritoPorSession(@PathVariable String sessionId);
     
-    @PutMapping("/api/carrito/{carritoId}/desactivar")
+    @PutMapping("/carrito/{carritoId}/desactivar")
     ResponseEntity<Void> desactivarCarrito(@PathVariable Long carritoId);
 }

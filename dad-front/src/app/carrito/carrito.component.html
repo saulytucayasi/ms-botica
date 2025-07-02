@@ -1,0 +1,167 @@
+<div class="carrito-container animate-fade-in">
+  <div class="header modern-card">
+    <div class="header-content">
+      <app-icon name="carrito" size="icon-large" color="#007bff"></app-icon>
+      <h2>Mi Carrito de Compras</h2>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger modern-card">
+    <app-icon name="error" size="icon-small" color="#dc3545"></app-icon>
+    <span>{{ error }}</span>
+    <button type="button" class="btn-close" (click)="error = null">
+      <app-icon name="close" size="icon-small"></app-icon>
+    </button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading modern-card">
+    <app-icon name="loading" size="icon-large" color="#007bff"></app-icon>
+    <span>Cargando...</span>
+  </div>
+
+  <!-- Add Product Section -->
+  <div class="add-product-section modern-card">
+    <div class="section-header">
+      <app-icon name="add" size="icon" color="#28a745"></app-icon>
+      <h4>Agregar Producto</h4>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="product">
+          <app-icon name="products" size="icon-small" color="#495057"></app-icon>
+          Producto:
+        </label>
+        <select id="product" [(ngModel)]="selectedProductId" class="form-control modern-input">
+          <option value="0">Seleccionar producto...</option>
+          <option *ngFor="let product of availableProducts" [value]="product.id">
+            {{ product.nombre }} - ${{ product.precio }} (Stock: {{ getAvailableStock(product.id!) }})
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="cantidad">
+          <app-icon name="inventory" size="icon-small" color="#495057"></app-icon>
+          Cantidad:
+        </label>
+        <input 
+          type="number" 
+          id="cantidad" 
+          [(ngModel)]="cantidad" 
+          min="1" 
+          class="form-control modern-input"
+        >
+      </div>
+      <div class="form-group">
+        <button 
+          type="button" 
+          (click)="agregarProducto()" 
+          class="btn btn-primary modern-btn"
+          [disabled]="loading || selectedProductId === 0"
+        >
+          <app-icon name="add" size="icon-small"></app-icon>
+          <span>Agregar al Carrito</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Items -->
+  <div class="cart-items modern-card" *ngIf="carrito && carrito.items && carrito.items.length > 0">
+    <div class="section-header">
+      <app-icon name="carrito" size="icon" color="#007bff"></app-icon>
+      <h4>Productos en el Carrito</h4>
+    </div>
+    <div class="table-responsive">
+      <table class="table modern-table">
+        <thead>
+          <tr>
+            <th>
+              <app-icon name="products" size="icon-small"></app-icon>
+              Producto
+            </th>
+            <th>
+              <app-icon name="ventas" size="icon-small"></app-icon>
+              Precio Unitario
+            </th>
+            <th>
+              <app-icon name="inventory" size="icon-small"></app-icon>
+              Cantidad
+            </th>
+            <th>
+              <app-icon name="ventas" size="icon-small"></app-icon>
+              Subtotal
+            </th>
+            <th>
+              <app-icon name="edit" size="icon-small"></app-icon>
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of carrito.items" class="animate-slide-in">
+            <td class="product-name">{{ getProductName(item.productoId) }}</td>
+            <td class="price">${{ item.precioUnitario }}</td>
+            <td>
+              <div class="quantity-controls">
+                <input 
+                  type="number" 
+                  [value]="item.cantidad" 
+                  (change)="actualizarCantidad(item.productoId, +$any($event.target).value)"
+                  min="1" 
+                  class="quantity-input modern-input"
+                >
+              </div>
+            </td>
+            <td class="price-highlight">${{ item.subtotal }}</td>
+            <td>
+              <button 
+                type="button" 
+                (click)="eliminarItem(item.productoId)" 
+                class="btn btn-danger btn-sm modern-btn delete-btn"
+                [disabled]="isDeleting(item.productoId)"
+                [class.loading]="isDeleting(item.productoId)"
+                title="Eliminar producto"
+              >
+                <app-icon *ngIf="!isDeleting(item.productoId)" name="delete" size="icon-small"></app-icon>
+                <app-icon *ngIf="isDeleting(item.productoId)" name="loading" size="icon-small"></app-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+      <div class="total-section">
+        <h4>Total: ${{ getTotal() }}</h4>
+      </div>
+      <div class="actions">
+        <button 
+          type="button" 
+          (click)="limpiarCarrito()" 
+          class="btn btn-warning"
+          [disabled]="loading"
+        >
+          Limpiar Carrito
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-success"
+          [disabled]="loading || !carrito.items.length"
+          (click)="procederAPagar()"
+        >
+          Proceder a Pagar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty Cart Message -->
+  <div *ngIf="carrito && (!carrito.items || carrito.items.length === 0)" class="empty-cart">
+    <h4>El carrito está vacío</h4>
+    <p>Agregue productos para comenzar su compra.</p>
+  </div>
+</div>
