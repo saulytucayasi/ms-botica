@@ -1,0 +1,16 @@
+com\example\ms_carrito\entity\Carrito$CarritoBuilder.class
+com\example\ms_carrito\feign\ProductoFeignFallback.class
+com\example\ms_carrito\controller\CarritoController.class
+com\example\ms_carrito\entity\Carrito.class
+com\example\ms_carrito\feign\ProductoFeign.class
+com\example\ms_carrito\dto\AgregarProductoRequest.class
+com\example\ms_carrito\repository\CarritoRepository.class
+com\example\ms_carrito\entity\CarritoItem.class
+com\example\ms_carrito\service\CarritoService.class
+com\example\ms_carrito\service\impl\CarritoServiceImpl.class
+com\example\ms_carrito\config\OpenApiConfig.class
+com\example\ms_carrito\dto\ProductoDto.class
+com\example\ms_carrito\dto\ActualizarCantidadRequest.class
+com\example\ms_carrito\MsCarritoApplication.class
+com\example\ms_carrito\repository\CarritoItemRepository.class
+com\example\ms_carrito\entity\CarritoItem$CarritoItemBuilder.class
