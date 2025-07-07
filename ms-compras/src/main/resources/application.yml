@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ms-compras-service
+    name: ms-compras
   profiles:
     active: development
   config:

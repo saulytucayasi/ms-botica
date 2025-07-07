@@ -27,8 +27,8 @@ spring:
         locator:
           enable: true
       routes:
-        - id: ms-compras-service
-          uri: lb://ms-compras-service
+        - id: ms-compras
+          uri: lb://ms-compras
           predicates:
             - Path=/compras/**
           filters:
@@ -71,12 +71,6 @@ spring:
           uri: lb://ms-ventas-service
           predicates:
             - Path=/ventas/**
-          filters:
-            - AuthFilter
-        - id: ms-compras-service
-          uri: lb://ms-compras-service
-          predicates:
-            - Path=/compras/**
           filters:
             - AuthFilter
 
