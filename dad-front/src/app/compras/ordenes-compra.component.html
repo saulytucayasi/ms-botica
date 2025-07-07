@@ -1,0 +1,189 @@
+<div class="container">
+  <div class="header">
+    <h2>Gestión de Órdenes de Compra</h2>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      + Nueva Orden
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="form-group">
+      <label for="estado">Filtrar por Estado:</label>
+      <select id="estado" [(ngModel)]="selectedEstado" (change)="filtrarPorEstado()" class="form-control">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let estado of estadosOrden" [value]="estado">{{estado}}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  <div *ngIf="success" class="alert alert-success">{{success}}</div>
+
+  <!-- Loading -->
+  <div *ngIf="loading && !showForm" class="loading">Cargando...</div>
+
+  <!-- Lista de Órdenes -->
+  <div *ngIf="!loading && !showForm" class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Proveedor</th>
+          <th>Fecha Orden</th>
+          <th>Fecha Entrega</th>
+          <th>Estado</th>
+          <th>Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let orden of ordenes; trackBy: trackByOrdenId">
+          <td>{{orden.numeroOrden}}</td>
+          <td>{{getProveedorNombre(orden.proveedorId)}}</td>
+          <td>{{orden.fechaOrden | date:'dd/MM/yyyy'}}</td>
+          <td>{{orden.fechaEntregaEsperada | date:'dd/MM/yyyy'}}</td>
+          <td>
+            <span class="status" [class]="'status-' + orden.estado.toLowerCase()">
+              {{orden.estado}}
+            </span>
+          </td>
+          <td>S/ {{orden.total | number:'1.2-2'}}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-secondary" (click)="openEditForm(orden)" 
+                    [disabled]="orden.estado === 'RECIBIDA' || orden.estado === 'CANCELADA'">
+              Editar
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline dropdown-toggle" 
+                      [disabled]="orden.estado === 'RECIBIDA' || orden.estado === 'CANCELADA'">
+                Estado
+              </button>
+              <div class="dropdown-menu">
+                <button *ngFor="let estado of estadosOrden" 
+                        class="dropdown-item"
+                        (click)="cambiarEstado(orden, estado)"
+                        [disabled]="estado === orden.estado">
+                  {{estado}}
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-danger" (click)="deleteOrden(orden)"
+                    [disabled]="orden.estado === 'ENVIADA' || orden.estado === 'RECIBIDA'">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="ordenes.length === 0" class="empty-state">
+      <p>No hay órdenes de compra registradas</p>
+      <button class="btn btn-primary" (click)="openCreateForm()">Crear primera orden</button>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="showForm" class="form-container">
+    <div class="form-header">
+      <h3>{{isEditing ? 'Editar' : 'Nueva'}} Orden de Compra</h3>
+      <button class="btn btn-secondary" (click)="closeForm()">Cerrar</button>
+    </div>
+
+    <form [formGroup]="ordenForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="proveedor">Proveedor *</label>
+          <select id="proveedor" formControlName="proveedorId" class="form-control" required>
+            <option value="">Seleccionar proveedor</option>
+            <option *ngFor="let proveedor of proveedores" [value]="proveedor.id">
+              {{proveedor.nombre}} - {{proveedor.ruc}}
+            </option>
+          </select>
+          <div *ngIf="ordenForm.get('proveedorId')?.invalid && ordenForm.get('proveedorId')?.touched" 
+               class="error">Proveedor es requerido</div>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaEntrega">Fecha de Entrega Esperada</label>
+          <input type="date" id="fechaEntrega" formControlName="fechaEntregaEsperada" 
+                 class="form-control">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="observaciones">Observaciones</label>
+        <textarea id="observaciones" formControlName="observaciones" 
+                  class="form-control" rows="3"></textarea>
+      </div>
+
+      <!-- Detalles de la Orden -->
+      <div class="detalles-section">
+        <div class="section-header">
+          <h4>Detalles de la Orden</h4>
+          <button type="button" class="btn btn-sm btn-primary" (click)="addDetalle()">
+            + Agregar Producto
+          </button>
+        </div>
+
+        <div formArrayName="detalles">
+          <div *ngFor="let detalle of detalles.controls; let i = index" 
+               [formGroupName]="i" class="detalle-item">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Producto *</label>
+                <select formControlName="productoId" class="form-control" required>
+                  <option value="">Seleccionar producto</option>
+                  <option *ngFor="let producto of productos" [value]="producto.id">
+                    {{producto.nombre}} - S/ {{producto.precio}}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Cantidad *</label>
+                <input type="number" formControlName="cantidad" 
+                       class="form-control" min="1" required>
+              </div>
+
+              <div class="form-group">
+                <label>Precio Unitario *</label>
+                <input type="number" formControlName="precioUnitario" 
+                       class="form-control" min="0" step="0.01" required>
+              </div>
+
+              <div class="form-group">
+                <label>Subtotal</label>
+                <input type="text" 
+                       [value]="'S/ ' + (calcularSubtotal(detalle.get('cantidad')?.value || 0, detalle.get('precioUnitario')?.value || 0) | number:'1.2-2')"
+                       class="form-control" readonly>
+              </div>
+
+              <div class="form-group">
+                <button type="button" class="btn btn-sm btn-danger" 
+                        (click)="removeDetalle(i)" [disabled]="detalles.length === 1">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="total-section">
+          <h4>Total: S/ {{calcularTotalOrden() | number:'1.2-2'}}</h4>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" 
+                [disabled]="!ordenForm.valid || detalles.length === 0 || loading">
+          {{isEditing ? 'Actualizar' : 'Crear'}} Orden
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeForm()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

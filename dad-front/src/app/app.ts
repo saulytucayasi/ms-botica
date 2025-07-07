@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/service/auth.service';
@@ -17,6 +17,7 @@ export class App implements OnInit {
   isAuthenticated = false;
   currentRoute: string = '';
   cartItemCount: number = 0;
+  dropdownOpen = false;
 
   constructor(
     private authService: AuthService,
@@ -84,5 +85,24 @@ export class App implements OnInit {
 
   navigateTo(route: string): void {
     this.router.navigate([route]);
+  }
+
+  toggleDropdown(): void {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  navigateToAndClose(route: string): void {
+    this.dropdownOpen = false;
+    this.router.navigate([route]);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const dropdown = target.closest('.dropdown');
+    
+    if (!dropdown && this.dropdownOpen) {
+      this.dropdownOpen = false;
+    }
   }
 }

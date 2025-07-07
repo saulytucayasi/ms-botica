@@ -1,0 +1,233 @@
+<div class="container">
+  <div class="header">
+    <h2>Gestión de Recepciones de Mercancía</h2>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      + Nueva Recepción
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="form-group">
+      <label for="estado">Filtrar por Estado:</label>
+      <select id="estado" [(ngModel)]="selectedEstado" (change)="filtrarPorEstado()" class="form-control">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let estado of estadosRecepcion" [value]="estado">{{estado}}</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="orden">Filtrar por Orden de Compra:</label>
+      <select id="orden" [(ngModel)]="selectedOrdenId" (change)="filtrarPorOrden()" class="form-control">
+        <option value="">Todas las órdenes</option>
+        <option *ngFor="let orden of ordenesCompra" [value]="orden.id">
+          {{orden.numeroOrden}} - {{orden.proveedor?.nombre}}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  <div *ngIf="success" class="alert alert-success">{{success}}</div>
+
+  <!-- Loading -->
+  <div *ngIf="loading && !showForm" class="loading">Cargando...</div>
+
+  <!-- Lista de Recepciones -->
+  <div *ngIf="!loading && !showForm" class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Orden de Compra</th>
+          <th>Fecha Recepción</th>
+          <th>Estado</th>
+          <th>Progreso</th>
+          <th>Observaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let recepcion of recepciones; trackBy: trackByRecepcionId">
+          <td>{{recepcion.numeroRecepcion}}</td>
+          <td>{{getOrdenNumero(recepcion.ordenCompraId)}}</td>
+          <td>{{recepcion.fechaRecepcion | date:'dd/MM/yyyy HH:mm'}}</td>
+          <td>
+            <span class="status" [class]="'status-' + recepcion.estado.toLowerCase()">
+              {{recepcion.estado}}
+            </span>
+          </td>
+          <td>
+            <div class="progress-info" *ngIf="recepcion.detalles && recepcion.detalles.length > 0">
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="getProgresoRecepcion(recepcion)">
+                </div>
+              </div>
+              <span class="progress-text">
+                {{getProgresoRecepcion(recepcion) | number:'1.0-0'}}%
+              </span>
+            </div>
+          </td>
+          <td>{{recepcion.observaciones || '-'}}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-secondary" (click)="openEditForm(recepcion)" 
+                    [disabled]="recepcion.estado === 'COMPLETA' || recepcion.estado === 'CANCELADA'">
+              Editar
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline dropdown-toggle" 
+                      [disabled]="recepcion.estado === 'COMPLETA' || recepcion.estado === 'CANCELADA'">
+                Estado
+              </button>
+              <div class="dropdown-menu">
+                <button *ngFor="let estado of estadosRecepcion" 
+                        class="dropdown-item"
+                        (click)="cambiarEstado(recepcion, estado)"
+                        [disabled]="estado === recepcion.estado">
+                  {{estado}}
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-success" (click)="procesarRecepcion(recepcion)"
+                    [disabled]="recepcion.estado !== 'COMPLETA'" 
+                    title="Procesar recepción y actualizar inventario">
+              Procesar
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteRecepcion(recepcion)"
+                    [disabled]="recepcion.estado === 'COMPLETA'">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="recepciones.length === 0" class="empty-state">
+      <p>No hay recepciones de mercancía registradas</p>
+      <button class="btn btn-primary" (click)="openCreateForm()">Crear primera recepción</button>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="showForm" class="form-container">
+    <div class="form-header">
+      <h3>{{isEditing ? 'Editar' : 'Nueva'}} Recepción de Mercancía</h3>
+      <button class="btn btn-secondary" (click)="closeForm()">Cerrar</button>
+    </div>
+
+    <form [formGroup]="recepcionForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ordenCompra">Orden de Compra *</label>
+          <select id="ordenCompra" formControlName="ordenCompraId" 
+                  (change)="onOrdenChange()" class="form-control" required>
+            <option value="">Seleccionar orden de compra</option>
+            <option *ngFor="let orden of ordenesCompra" [value]="orden.id">
+              {{orden.numeroOrden}} - {{orden.proveedor?.nombre}} - S/ {{orden.total | number:'1.2-2'}}
+            </option>
+          </select>
+          <div *ngIf="recepcionForm.get('ordenCompraId')?.invalid && recepcionForm.get('ordenCompraId')?.touched" 
+               class="error">Orden de compra es requerida</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="observaciones">Observaciones</label>
+        <textarea id="observaciones" formControlName="observaciones" 
+                  class="form-control" rows="3" 
+                  placeholder="Observaciones sobre la recepción..."></textarea>
+      </div>
+
+      <!-- Detalles de la Recepción -->
+      <div class="detalles-section">
+        <div class="section-header">
+          <h4>Detalles de la Recepción</h4>
+          <button type="button" class="btn btn-sm btn-primary" (click)="addDetalle()"
+                  [disabled]="!recepcionForm.get('ordenCompraId')?.value">
+            + Agregar Producto
+          </button>
+        </div>
+
+        <div formArrayName="detalles">
+          <div *ngFor="let detalle of detalles.controls; let i = index" 
+               [formGroupName]="i" class="detalle-item">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Producto *</label>
+                <select formControlName="productoId" class="form-control" required>
+                  <option value="">Seleccionar producto</option>
+                  <option *ngFor="let producto of productos" [value]="producto.id">
+                    {{producto.nombre}}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Cantidad Esperada *</label>
+                <input type="number" formControlName="cantidadEsperada" 
+                       class="form-control" min="0" required readonly>
+              </div>
+
+              <div class="form-group">
+                <label>Cantidad Recibida *</label>
+                <input type="number" formControlName="cantidadRecibida" 
+                       class="form-control" min="0" required>
+              </div>
+
+              <div class="form-group">
+                <label>Precio Unitario *</label>
+                <input type="number" formControlName="precioUnitario" 
+                       class="form-control" min="0" step="0.01" required readonly>
+              </div>
+
+              <div class="form-group">
+                <label>% Recibido</label>
+                <input type="text" 
+                       [value]="calcularPorcentajeRecibido(detalle.get('cantidadRecibida')?.value || 0, detalle.get('cantidadEsperada')?.value || 0) + '%'"
+                       class="form-control" readonly>
+              </div>
+
+              <div class="form-group">
+                <label>Subtotal</label>
+                <input type="text" 
+                       [value]="'S/ ' + (calcularSubtotal(detalle.get('cantidadRecibida')?.value || 0, detalle.get('precioUnitario')?.value || 0) | number:'1.2-2')"
+                       class="form-control" readonly>
+              </div>
+
+              <div class="form-group">
+                <button type="button" class="btn btn-sm btn-danger" 
+                        (click)="removeDetalle(i)" [disabled]="detalles.length === 1">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-section" *ngIf="detalles.length > 0">
+          <div class="summary-item">
+            <strong>Total Esperado: {{getTotalEsperado()}} unidades</strong>
+          </div>
+          <div class="summary-item">
+            <strong>Total Recibido: {{getTotalRecibido()}} unidades</strong>
+          </div>
+          <div class="summary-item">
+            <strong>Progreso Global: {{getProgresoGlobal() | number:'1.0-0'}}%</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" 
+                [disabled]="!recepcionForm.valid || detalles.length === 0 || loading">
+          {{isEditing ? 'Actualizar' : 'Crear'}} Recepción
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeForm()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

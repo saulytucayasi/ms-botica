@@ -104,6 +104,90 @@ export interface AgregarCarritoRequest {
   cantidad: number;
 }
 
+export interface OrdenCompra {
+  id?: number;
+  numeroOrden: string;
+  proveedorId: number;
+  fechaOrden?: string;
+  fechaEntregaEsperada?: string;
+  fechaActualizacion?: string;
+  estado: string;
+  subtotal: number;
+  impuestos: number;
+  total: number;
+  observaciones?: string;
+  proveedor?: Proveedor;
+  detalles?: DetalleOrdenCompra[];
+}
+
+export interface DetalleOrdenCompra {
+  id?: number;
+  ordenCompraId: number;
+  productoId: number;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  producto?: Product;
+}
+
+export interface Proveedor {
+  id?: number;
+  nombre: string;
+  ruc: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  contacto?: string;
+  estado: string;
+  fechaRegistro?: string;
+  fechaActualizacion?: string;
+}
+
+export interface RecepcionMercancia {
+  id?: number;
+  numeroRecepcion: string;
+  ordenCompraId: number;
+  fechaRecepcion?: string;
+  fechaActualizacion?: string;
+  estado: string;
+  observaciones?: string;
+  ordenCompra?: OrdenCompra;
+  detalles?: DetalleRecepcion[];
+}
+
+export interface DetalleRecepcion {
+  id?: number;
+  recepcionId: number;
+  productoId: number;
+  cantidadEsperada: number;
+  cantidadRecibida: number;
+  precioUnitario: number;
+  subtotal: number;
+  producto?: Product;
+}
+
+export interface CrearOrdenCompraRequest {
+  proveedorId: number;
+  fechaEntregaEsperada?: string;
+  observaciones?: string;
+  detalles: {
+    productoId: number;
+    cantidad: number;
+    precioUnitario: number;
+  }[];
+}
+
+export interface CrearRecepcionRequest {
+  ordenCompraId: number;
+  observaciones?: string;
+  detalles: {
+    productoId: number;
+    cantidadEsperada: number;
+    cantidadRecibida: number;
+    precioUnitario: number;
+  }[];
+}
+
 @Injectable({providedIn: 'root'})
 export class Services {
   constructor(private http: HttpClient) {}
@@ -240,5 +324,126 @@ export class Services {
 
   getAllVentas(): Observable<Venta[]> {
     return this.http.get<Venta[]>('ventas');
+  }
+
+  // COMPRAS SERVICES
+
+  // Ordenes de Compra
+  getOrdenesCompra(): Observable<OrdenCompra[]> {
+    return this.http.get<OrdenCompra[]>('compras/ordenes-compra');
+  }
+
+  getOrdenCompraById(id: number): Observable<OrdenCompra> {
+    return this.http.get<OrdenCompra>(`compras/ordenes-compra/${id}`);
+  }
+
+  getOrdenCompraByNumero(numeroOrden: string): Observable<OrdenCompra> {
+    return this.http.get<OrdenCompra>(`compras/ordenes-compra/numero/${numeroOrden}`);
+  }
+
+  getOrdenesCompraPorProveedor(proveedorId: number): Observable<OrdenCompra[]> {
+    return this.http.get<OrdenCompra[]>(`compras/ordenes-compra/proveedor/${proveedorId}`);
+  }
+
+  getOrdenesCompraPorEstado(estado: string): Observable<OrdenCompra[]> {
+    return this.http.get<OrdenCompra[]>(`compras/ordenes-compra/estado/${estado}`);
+  }
+
+  getOrdenesCompraVencidas(): Observable<OrdenCompra[]> {
+    return this.http.get<OrdenCompra[]>('compras/ordenes-compra/vencidas');
+  }
+
+  createOrdenCompra(orden: CrearOrdenCompraRequest): Observable<OrdenCompra> {
+    return this.http.post<OrdenCompra>('compras/ordenes-compra', orden);
+  }
+
+  updateOrdenCompra(id: number, orden: OrdenCompra): Observable<OrdenCompra> {
+    return this.http.put<OrdenCompra>(`compras/ordenes-compra/${id}`, orden);
+  }
+
+  deleteOrdenCompra(id: number): Observable<void> {
+    return this.http.delete<void>(`compras/ordenes-compra/${id}`);
+  }
+
+  cambiarEstadoOrdenCompra(id: number, estado: string): Observable<OrdenCompra> {
+    return this.http.patch<OrdenCompra>(`compras/ordenes-compra/${id}/estado?estado=${estado}`, {});
+  }
+
+  // Proveedores
+  getProveedores(): Observable<Proveedor[]> {
+    return this.http.get<Proveedor[]>('compras/proveedores');
+  }
+
+  getProveedorById(id: number): Observable<Proveedor> {
+    return this.http.get<Proveedor>(`compras/proveedores/${id}`);
+  }
+
+  getProveedorByRuc(ruc: string): Observable<Proveedor> {
+    return this.http.get<Proveedor>(`compras/proveedores/ruc/${ruc}`);
+  }
+
+  buscarProveedoresPorNombre(nombre: string): Observable<Proveedor[]> {
+    return this.http.get<Proveedor[]>(`compras/proveedores/buscar?nombre=${nombre}`);
+  }
+
+  getProveedoresActivos(): Observable<Proveedor[]> {
+    return this.http.get<Proveedor[]>('compras/proveedores/activos');
+  }
+
+  createProveedor(proveedor: Proveedor): Observable<Proveedor> {
+    return this.http.post<Proveedor>('compras/proveedores', proveedor);
+  }
+
+  updateProveedor(id: number, proveedor: Proveedor): Observable<Proveedor> {
+    return this.http.put<Proveedor>(`compras/proveedores/${id}`, proveedor);
+  }
+
+  deleteProveedor(id: number): Observable<void> {
+    return this.http.delete<void>(`compras/proveedores/${id}`);
+  }
+
+  cambiarEstadoProveedor(id: number, estado: string): Observable<Proveedor> {
+    return this.http.patch<Proveedor>(`compras/proveedores/${id}/estado?estado=${estado}`, {});
+  }
+
+  // Recepciones de Mercancia
+  getRecepciones(): Observable<RecepcionMercancia[]> {
+    return this.http.get<RecepcionMercancia[]>('compras/recepciones');
+  }
+
+  getRecepcionById(id: number): Observable<RecepcionMercancia> {
+    return this.http.get<RecepcionMercancia>(`compras/recepciones/${id}`);
+  }
+
+  getRecepcionByNumero(numeroRecepcion: string): Observable<RecepcionMercancia> {
+    return this.http.get<RecepcionMercancia>(`compras/recepciones/numero/${numeroRecepcion}`);
+  }
+
+  getRecepcionesPorOrdenCompra(ordenCompraId: number): Observable<RecepcionMercancia[]> {
+    return this.http.get<RecepcionMercancia[]>(`compras/recepciones/orden-compra/${ordenCompraId}`);
+  }
+
+  getRecepcionesPorEstado(estado: string): Observable<RecepcionMercancia[]> {
+    return this.http.get<RecepcionMercancia[]>(`compras/recepciones/estado/${estado}`);
+  }
+
+  createRecepcion(recepcion: CrearRecepcionRequest): Observable<RecepcionMercancia> {
+    return this.http.post<RecepcionMercancia>('compras/recepciones', recepcion);
+  }
+
+  updateRecepcion(id: number, recepcion: RecepcionMercancia): Observable<RecepcionMercancia> {
+    return this.http.put<RecepcionMercancia>(`compras/recepciones/${id}`, recepcion);
+  }
+
+  deleteRecepcion(id: number): Observable<void> {
+    return this.http.delete<void>(`compras/recepciones/${id}`);
+  }
+
+  cambiarEstadoRecepcion(id: number, estado: string): Observable<RecepcionMercancia> {
+    return this.http.patch<RecepcionMercancia>(`compras/recepciones/${id}/estado?estado=${estado}`, {});
+  }
+
+  procesarRecepcion(id: number): Observable<RecepcionMercancia> {
+    return this.http.post<RecepcionMercancia>(`compras/recepciones/${id}/procesar`, {});
   }
 }

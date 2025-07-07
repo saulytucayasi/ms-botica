@@ -1,0 +1,189 @@
+<div class="container">
+  <div class="header">
+    <h2>Gestión de Proveedores</h2>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      + Nuevo Proveedor
+    </button>
+  </div>
+
+  <!-- Filtros y Búsqueda -->
+  <div class="filters">
+    <div class="search-section">
+      <div class="form-group">
+        <label for="search">Buscar por nombre o email:</label>
+        <input type="text" id="search" [(ngModel)]="searchTerm" 
+               (input)="buscarProveedores()" 
+               class="form-control" 
+               placeholder="Escriba para buscar...">
+      </div>
+      
+      <div class="form-group">
+        <label for="ruc">Buscar por RUC:</label>
+        <input type="text" id="ruc" #rucInput
+               (input)="rucInput.value.length === 11 ? buscarPorRuc(rucInput.value) : null"
+               class="form-control" 
+               placeholder="11 dígitos"
+               maxlength="11">
+      </div>
+    </div>
+    
+    <div class="filter-options">
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="showOnlyActive" (change)="toggleActiveFilter()">
+        Solo proveedores activos
+      </label>
+      <button class="btn btn-secondary btn-sm" (click)="loadProveedores()">
+        Mostrar todos
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  <div *ngIf="success" class="alert alert-success">{{success}}</div>
+
+  <!-- Loading -->
+  <div *ngIf="loading && !showForm" class="loading">Cargando...</div>
+
+  <!-- Lista de Proveedores -->
+  <div *ngIf="!loading && !showForm" class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>RUC</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th>Contacto</th>
+          <th>Estado</th>
+          <th>Fecha Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let proveedor of filteredProveedores; trackBy: trackByProveedorId">
+          <td>
+            <div class="proveedor-name">
+              <strong>{{proveedor.nombre}}</strong>
+              <small *ngIf="proveedor.direccion">{{proveedor.direccion}}</small>
+            </div>
+          </td>
+          <td>{{proveedor.ruc}}</td>
+          <td>{{proveedor.email || '-'}}</td>
+          <td>{{proveedor.telefono || '-'}}</td>
+          <td>{{proveedor.contacto || '-'}}</td>
+          <td>
+            <span class="status" [class]="'status-' + proveedor.estado.toLowerCase()">
+              {{proveedor.estado}}
+            </span>
+          </td>
+          <td>{{proveedor.fechaRegistro | date:'dd/MM/yyyy'}}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-secondary" (click)="openEditForm(proveedor)">
+              Editar
+            </button>
+            <button class="btn btn-sm" 
+                    [class]="proveedor.estado === 'ACTIVO' ? 'btn-warning' : 'btn-success'"
+                    (click)="cambiarEstado(proveedor)">
+              {{proveedor.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}}
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteProveedor(proveedor)"
+                    [disabled]="proveedor.estado === 'ACTIVO'">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="filteredProveedores.length === 0" class="empty-state">
+      <p *ngIf="searchTerm || showOnlyActive">No se encontraron proveedores con los filtros aplicados</p>
+      <p *ngIf="!searchTerm && !showOnlyActive">No hay proveedores registrados</p>
+      <button *ngIf="!searchTerm && !showOnlyActive" class="btn btn-primary" (click)="openCreateForm()">
+        Crear primer proveedor
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="showForm" class="form-container">
+    <div class="form-header">
+      <h3>{{isEditing ? 'Editar' : 'Nuevo'}} Proveedor</h3>
+      <button class="btn btn-secondary" (click)="closeForm()">Cerrar</button>
+    </div>
+
+    <form [formGroup]="proveedorForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nombre">Nombre de la Empresa *</label>
+          <input type="text" id="nombre" formControlName="nombre" 
+                 class="form-control" required>
+          <div *ngIf="proveedorForm.get('nombre')?.invalid && proveedorForm.get('nombre')?.touched" 
+               class="error">
+            <span *ngIf="proveedorForm.get('nombre')?.errors?.['required']">Nombre es requerido</span>
+            <span *ngIf="proveedorForm.get('nombre')?.errors?.['minlength']">Mínimo 2 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ruc">RUC *</label>
+          <input type="text" id="ruc" formControlName="ruc" 
+                 class="form-control" maxlength="11" required>
+          <div *ngIf="proveedorForm.get('ruc')?.invalid && proveedorForm.get('ruc')?.touched" 
+               class="error">
+            <span *ngIf="proveedorForm.get('ruc')?.errors?.['required']">RUC es requerido</span>
+            <span *ngIf="proveedorForm.get('ruc')?.errors?.['pattern']">RUC debe tener 11 dígitos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="direccion">Dirección</label>
+        <input type="text" id="direccion" formControlName="direccion" 
+               class="form-control">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" formControlName="telefono" 
+                 class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" 
+                 class="form-control">
+          <div *ngIf="proveedorForm.get('email')?.invalid && proveedorForm.get('email')?.touched" 
+               class="error">Email debe tener un formato válido</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="contacto">Persona de Contacto</label>
+          <input type="text" id="contacto" formControlName="contacto" 
+                 class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado *</label>
+          <select id="estado" formControlName="estado" class="form-control" required>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" 
+                [disabled]="!proveedorForm.valid || loading">
+          {{isEditing ? 'Actualizar' : 'Crear'}} Proveedor
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeForm()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

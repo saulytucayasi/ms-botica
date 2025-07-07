@@ -8,6 +8,9 @@ import { UsersComponent } from './users/users.component';
 import { CarritoComponent } from './carrito/carrito.component';
 import { VentasComponent } from './ventas/ventas.component';
 import { ReciboComponent } from './recibo/recibo.component';
+import { OrdenesCompraComponent } from './compras/ordenes-compra.component';
+import { ProveedoresComponent } from './compras/proveedores.component';
+import { RecepcionesComponent } from './compras/recepciones.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -51,6 +54,21 @@ export const routes: Routes = [
   { 
     path: 'recibo/:id', 
     component: ReciboComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'ordenes-compra', 
+    component: OrdenesCompraComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'proveedores', 
+    component: ProveedoresComponent, 
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'recepciones', 
+    component: RecepcionesComponent, 
     canActivate: [AuthGuard] 
   },
   { path: '**', redirectTo: '/login' }

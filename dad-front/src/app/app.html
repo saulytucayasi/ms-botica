@@ -34,6 +34,25 @@
         <app-icon name="ventas" size="icon-small"></app-icon>
         <span>Ventas</span>
       </button>
+      <div class="dropdown" [class.open]="dropdownOpen">
+        <button class="nav-link dropdown-toggle" 
+                (click)="toggleDropdown()"
+                [class.active]="currentRoute.includes('/ordenes-compra') || currentRoute.includes('/proveedores') || currentRoute.includes('/recepciones')">
+          <app-icon name="products" size="icon-small"></app-icon>
+          <span>Compras</span>
+        </button>
+        <div class="dropdown-menu" [class.show]="dropdownOpen">
+          <button class="dropdown-item" (click)="navigateToAndClose('/ordenes-compra')" [class.active]="currentRoute === '/ordenes-compra'">
+            <span>Órdenes de Compra</span>
+          </button>
+          <button class="dropdown-item" (click)="navigateToAndClose('/proveedores')" [class.active]="currentRoute === '/proveedores'">
+            <span>Proveedores</span>
+          </button>
+          <button class="dropdown-item" (click)="navigateToAndClose('/recepciones')" [class.active]="currentRoute === '/recepciones'">
+            <span>Recepciones</span>
+          </button>
+        </div>
+      </div>
       <button class="nav-link" (click)="navigateTo('/users')" [class.active]="currentRoute === '/users'">
         <app-icon name="users" size="icon-small"></app-icon>
         <span>Usuarios</span>
