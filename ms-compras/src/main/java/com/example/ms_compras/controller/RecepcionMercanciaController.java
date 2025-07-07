@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/recepciones")
+@RequestMapping("/recepciones")
 @RequiredArgsConstructor
 public class RecepcionMercanciaController {
     

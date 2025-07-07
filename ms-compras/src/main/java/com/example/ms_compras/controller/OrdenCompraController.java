@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/ordenes-compra")
+@RequestMapping("/ordenes-compra")
 @RequiredArgsConstructor
 public class OrdenCompraController {
     
