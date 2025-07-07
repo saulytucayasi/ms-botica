@@ -18,6 +18,7 @@ com\example\ms_compras\feign\InventarioFeignFallback.class
 com\example\ms_compras\dto\InventarioDto$InventarioDtoBuilder.class
 com\example\ms_compras\service\impl\OrdenCompraServiceImpl.class
 com\example\ms_compras\repository\OrdenCompraRepository.class
+com\example\ms_compras\controller\TestController.class
 com\example\ms_compras\service\RecepcionMercanciaService.class
 com\example\ms_compras\service\ProveedorService.class
 com\example\ms_compras\entity\OrdenCompraItem$OrdenCompraItemBuilder.class
