@@ -58,13 +58,13 @@ spring:
         - id: ms-carrito-service
           uri: lb://ms-carrito-service
           predicates:
-            - Path=/carrito/**
+            - Path=/api/carrito/**
           filters:
             - AuthFilter
         - id: ms-ventas-service
           uri: lb://ms-ventas-service
           predicates:
-            - Path=/ventas/**
+            - Path=/api/ventas/**
           filters:
             - AuthFilter
 
